@@ -15,13 +15,13 @@ public class MainPower {
     public static void main(String[] args) {
 
         PowerCalculator calculator = new PowerCalculator();
-//        Test test1 = new Test(calculator::iterativePower);
-//        System.out.println("iterativePower:");
-//        test1.run("src/main/resources/algebraic_algorithms/3.Power/");
+        Test test1 = new Test(calculator::iterativePower);
+        System.out.println("iterativePower:");
+        test1.run("src/main/resources/algebraic_algorithms/3.Power/");
 
-//        Test test2 = new Test(calculator::binPower);
-//        System.out.println("binPower:");
-//        test2.run("src/main/resources/algebraic_algorithms/3.Power/");
+        Test test2 = new Test(calculator::binPower);
+        System.out.println("binPower:");
+        test2.run("src/main/resources/algebraic_algorithms/3.Power/");
 
         Test test3 = new Test(calculator::subtractPower);
         System.out.println("subtractPower:");

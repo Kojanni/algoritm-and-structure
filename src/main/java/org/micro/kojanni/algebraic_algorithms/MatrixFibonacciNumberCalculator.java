@@ -1,28 +1,24 @@
 package org.micro.kojanni.algebraic_algorithms;
 
-/**
- * Написать класс умножения матриц, реализовать алгоритм возведения матрицы в степень через двоичное разложение показателя степени,
- * реализовать алгоритм поиска чисел Фибоначчи O(LogN) через умножение матриц, используя созданный класс.
- */
-public class MatrixFibonacciNumberCalculator {
-    private static long[][] fibMatrix = {{1, 1}, {1, 0}};
+import java.math.BigInteger;
 
-    public static long[][] multiply(long[][] a, long[][] b) {
-        int n = a.length;
-        long[][] result = new long[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                for (int k = 0; k < n; k++) {
-                    result[i][j] += a[i][k] * b[k][j];
-                }
-            }
-        }
+public class MatrixFibonacciNumberCalculator {
+    private static final BigInteger[][] FIB_MATRIX = {
+            {BigInteger.ONE, BigInteger.ONE},
+            {BigInteger.ONE, BigInteger.ZERO}
+    };
+
+    public static BigInteger[][] multiply(BigInteger[][] a, BigInteger[][] b) {
+        BigInteger[][] result = new BigInteger[2][2];
+        result[0][0] = a[0][0].multiply(b[0][0]).add(a[0][1].multiply(b[1][0]));
+        result[0][1] = a[0][0].multiply(b[0][1]).add(a[0][1].multiply(b[1][1]));
+        result[1][0] = a[1][0].multiply(b[0][0]).add(a[1][1].multiply(b[1][0]));
+        result[1][1] = a[1][0].multiply(b[0][1]).add(a[1][1].multiply(b[1][1]));
         return result;
     }
 
-    public static long[][] power(long[][] matrix, long exponent) {
-        int n = matrix.length;
-        long[][] result = identityMatrix(n);
+    public static BigInteger[][] power(BigInteger[][] matrix, int exponent) {
+        BigInteger[][] result = identityMatrix();
         while (exponent > 0) {
             if ((exponent & 1) == 1) {
                 result = multiply(result, matrix);
@@ -33,26 +29,23 @@ public class MatrixFibonacciNumberCalculator {
         return result;
     }
 
-    private static long[][] identityMatrix(int n) {
-        long[][] identity = new long[n][n];
-        for (int i = 0; i < n; i++) {
-            identity[i][i] = 1;
-        }
-        return identity;
+    private static BigInteger[][] identityMatrix() {
+        return new BigInteger[][] {
+                {BigInteger.ONE, BigInteger.ZERO},
+                {BigInteger.ZERO, BigInteger.ONE}
+        };
     }
 
+    public BigInteger fibonacci(int n) {
+        if (n == 0) return BigInteger.ZERO;
+        if (n == 1) return BigInteger.ONE;
 
-    public static long fibonacci(int n) {
-        if (n == 0) return 0;
-
-        long[][] result = power(fibMatrix, n - 1);
-
+        BigInteger[][] result = power(FIB_MATRIX, n - 1);
         return result[0][0];
     }
 
-    public static void main(String[] args) {
-        System.out.println(fibonacci(2));
-        System.out.println(fibonacci(5));
-        System.out.println(fibonacci(8));
+    public String fibonacci(String[] args) {
+        int x = Integer.parseInt(args[0]);
+        return String.valueOf(fibonacci(x));
     }
 }
