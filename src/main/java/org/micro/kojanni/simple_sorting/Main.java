@@ -58,23 +58,25 @@ public class Main {
         InsertionSort insertionSort = new InsertionSort();
         ShellSort shellSort = new ShellSort();
 
-//Занести в сравнительную таблицу время сортировки случайного массива размером 100, 1000 и 10000 для каждого алгоритма.
-//       for (int i = 2; i < 5; i++){
-//           int size = (int) Math.pow(10, i);
-//           System.out.println("\nРазмер массива = " + size);
-//
-//           int[] a1 = randomArray(size);
-//           int[] a2 = Arrays.copyOf(a1, a1.length);
-//           int[] a3 = Arrays.copyOf(a1, a1.length);
-//
-//           long tBubble = test(() -> bubbleSort.sortSimple(a1));
-//           long tInsert = test(() -> insertionSort.sort(a2));
-//           long tShell = test(() -> shellSort.sort(a3));
-//
-//           System.out.println("BubbleSort:    " + tBubble / 1_000_000.0 + " ms");
-//           System.out.println("InsertionSort: " + tInsert / 1_000_000.0 + " ms");
-//           System.out.println("ShellSort:     " + tShell / 1_000_000.0 + " ms");
-//       }
+       for (int i = 2; i < 7; i++){
+           int size = (int) Math.pow(10, i);
+           System.out.println("\nРазмер массива = " + size);
+
+           int[] a1 = randomArray(size);
+           int[] a2 = Arrays.copyOf(a1, a1.length);
+           int[] a3 = Arrays.copyOf(a1, a1.length);
+           int[] a4 = Arrays.copyOf(a1, a1.length);
+
+           long tBubble = test(() -> bubbleSort.sort(a1));
+           long tInsert = test(() -> insertionSort.sort(a2));
+           long tShell = test(() -> shellSort.sort(a3));
+           long tShellH = test(() -> shellSort.sortHibbard(a4));
+
+           System.out.println("BubbleSort:    " + tBubble / 1_000_000.0 + " ms");
+           System.out.println("InsertionSort: " + tInsert / 1_000_000.0 + " ms");
+           System.out.println("ShellSortSedgewick:     " + tShell / 1_000_000.0 + " ms");
+           System.out.println("ShellSortHibbard:     " + tShellH / 1_000_000.0 + " ms");
+       }
 
         System.out.println("Сортировка пузырьком:");
         Test testBubbleSort = new Test(bubbleSort::processSort);
@@ -83,23 +85,19 @@ public class Main {
         testBubbleSort.run("src/main/resources/simple_sorting/2.sorted/");
         testBubbleSort.run("src/main/resources/simple_sorting/3.revers/");
 
-//        System.out.println("Сортировка вставками:");
-//        Test testInsertionSort = new Test(insertionSort::processSort);
-//        testInsertionSort.run("src/main/resources/simple_sorting/0.random/");
-////        testInsertionSort.run("src/main/resources/simple_sorting/1.digits/");
-//        testInsertionSort.run("src/main/resources/simple_sorting/2.sorted/");
-//        testInsertionSort.run("src/main/resources/simple_sorting/3.revers/");
+        System.out.println("Сортировка вставками:");
+        Test testInsertionSort = new Test(insertionSort::processSort);
+        testInsertionSort.run("src/main/resources/simple_sorting/0.random/");
+        testInsertionSort.run("src/main/resources/simple_sorting/1.digits/");
+        testInsertionSort.run("src/main/resources/simple_sorting/2.sorted/");
+        testInsertionSort.run("src/main/resources/simple_sorting/3.revers/");
 
-//        System.out.println("Сортировка Шелла:");
-//        Test testShellSort = new Test(shellSort::processSort);
-//        testShellSort.run("src/main/resources/simple_sorting/0.random/");
-//        testInsertionSort.run("src/main/resources/simple_sorting/1.digits/");
-//        testInsertionSort.run("src/main/resources/simple_sorting/2.sorted/");
-//        testInsertionSort.run("src/main/resources/simple_sorting/3.revers/");
-
-
-
-
+        System.out.println("Сортировка Шелла:");
+        Test testShellSort = new Test(shellSort::processSort);
+        testShellSort.run("src/main/resources/simple_sorting/0.random/");
+        testShellSort.run("src/main/resources/simple_sorting/1.digits/");
+        testShellSort.run("src/main/resources/simple_sorting/2.sorted/");
+        testShellSort.run("src/main/resources/simple_sorting/3.revers/");
     }
 
     private static int[] randomArray(int n) {
