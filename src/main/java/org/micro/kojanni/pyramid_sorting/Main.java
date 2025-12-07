@@ -47,19 +47,19 @@ public class Main {
         SelectionSort selectionSort = new SelectionSort();
         HeapSort heapSort = new HeapSort();
 
-//       for (int i = 2; i < 7; i++){
-//           int size = (int) Math.pow(10, i);
-//           System.out.println("\nРазмер массива = " + size);
-//
-//           int[] a1 = randomArray(size);
-//           int[] a2 = Arrays.copyOf(a1, a1.length);
-//
-//           long tSelect = test(() -> selectionSort.sort(a1));
-//           long tHeap = test(() -> heapSort.sort(a2));
-//
-//           System.out.println("SelectionSort:    " + tSelect / 1_000_000.0 + " ms");
-//           System.out.println("HeapSort: " + tHeap / 1_000_000.0 + " ms");
-//       }
+       for (int i = 2; i < 7; i++){
+           int size = (int) Math.pow(10, i);
+           System.out.println("\nРазмер массива = " + size);
+
+           int[] a1 = randomArray(size);
+           int[] a2 = Arrays.copyOf(a1, a1.length);
+
+           long tSelect = test(() -> selectionSort.sort(a1));
+           long tHeap = test(() -> heapSort.sort(a2));
+
+           System.out.println("SelectionSort:    " + tSelect / 1_000_000.0 + " ms");
+           System.out.println("HeapSort: " + tHeap / 1_000_000.0 + " ms");
+       }
 
         System.out.println("Сортировка выбором:");
         Test testBubbleSort = new Test(selectionSort::processSort);
