@@ -63,17 +63,17 @@ public class Main {
 
         System.out.println("Сортировка выбором:");
         Test testBubbleSort = new Test(selectionSort::processSort);
-        testBubbleSort.run("src/main/resources/pypamid_sorting/0.random/");
-        testBubbleSort.run("src/main/resources/pypamid_sorting/1.digits/");
-        testBubbleSort.run("src/main/resources/pypamid_sorting/2.sorted/");
-        testBubbleSort.run("src/main/resources/pypamid_sorting/3.revers/");
+        testBubbleSort.run("src/main/resources/sorting/0.random/");
+        testBubbleSort.run("src/main/resources/sorting/1.digits/");
+        testBubbleSort.run("src/main/resources/sorting/2.sorted/");
+        testBubbleSort.run("src/main/resources/sorting/3.revers/");
 
         System.out.println("Сортировка пирамидальная:");
         Test testInsertionSort = new Test(heapSort::processSort);
-        testInsertionSort.run("src/main/resources/pypamid_sorting/0.random/");
-        testInsertionSort.run("src/main/resources/pypamid_sorting/1.digits/");
-        testInsertionSort.run("src/main/resources/pypamid_sorting/2.sorted/");
-        testInsertionSort.run("src/main/resources/pypamid_sorting/3.revers/");
+        testInsertionSort.run("src/main/resources/sorting/0.random/");
+        testInsertionSort.run("src/main/resources/sorting/1.digits/");
+        testInsertionSort.run("src/main/resources/sorting/2.sorted/");
+        testInsertionSort.run("src/main/resources/sorting/3.revers/");
     }
 
     private static int[] randomArray(int n) {
