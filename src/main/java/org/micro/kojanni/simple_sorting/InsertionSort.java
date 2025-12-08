@@ -38,7 +38,7 @@ public class InsertionSort extends Sorting {
 
                 index--;
             }
-            array[index] = value;
+            array[index + 1] = value;
         }
         return array;
     }
