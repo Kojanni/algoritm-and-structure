@@ -43,7 +43,6 @@ public class Test {
                 // Сравнение результатов
                 if (result.equals(expected)) {
                     System.out.printf("Test %d: PASSED%n", iter);
-//                    System.out.println("Expected: " + expected);
                 } else {
                     System.out.printf("Test %d: FAILED%n", iter);
                     System.out.println("Expected: " + expected);
