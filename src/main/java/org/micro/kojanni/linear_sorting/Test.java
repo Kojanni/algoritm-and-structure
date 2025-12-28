@@ -57,4 +57,34 @@ public class Test {
             iter++;
         }
     }
+
+    @SneakyThrows
+    public void runBinary(String filePath, Function<int[], int[]> function) {
+        byte[] bytes = Files.readAllBytes(Paths.get(filePath));
+        int[] numbers = new int[bytes.length / 2];
+
+        for (int i = 0; i < numbers.length; i++) {
+            numbers[i] = ((bytes[i * 2] & 0xFF) | ((bytes[i * 2 + 1] & 0xFF) << 8));
+        }
+
+        long start = System.nanoTime();
+        int[] result = function.apply(numbers);
+        long time = System.nanoTime() - start;
+
+        System.out.println("Time: " + time + " ns (" + (time / 1_000_000.0) + " ms)");
+        System.out.println("Numbers: " + numbers.length);
+        boolean sorted = isSorted(result);
+        System.out.println("Проверка сортировки: " + (sorted ? "✓ УСПЕХ" : "✗ ОШИБКА"));
+    }
+
+    private boolean isSorted(int[] array) {
+        for (int i = 1; i < Math.min(array.length, 10000); i++) {
+            if (array[i] < array[i - 1]) {
+                System.out.println("Ошибка на индексах " + (i-1) + "-" + i +
+                        ": " + array[i-1] + " > " + array[i]);
+                return false;
+            }
+        }
+        return true;
+    }
 }
