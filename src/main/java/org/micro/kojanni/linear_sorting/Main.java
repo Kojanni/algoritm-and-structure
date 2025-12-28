@@ -59,5 +59,6 @@ public class Main {
         System.out.println("Блочная сортировка:");
         Test testBucketSort = new Test(bucketSort::processSort);
         testBucketSort.runBinary("src/main/java/org/micro/kojanni/linear_sorting/numbers.bin", bucketSort::sort);
+
     }
 }

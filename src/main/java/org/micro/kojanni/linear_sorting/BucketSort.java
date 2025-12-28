@@ -1,9 +1,15 @@
 package org.micro.kojanni.linear_sorting;
 
+import org.micro.kojanni.visual.SortingAlgorithm;
+
 /**
  *
  * Блочная сортировка, Карманная сортировка, корзинная сортировка
  */
+@SortingAlgorithm(
+        name = "Блочная сортировка",
+        description = "Сортирует числа в конечное число «карманов» с последующей их сортировкой вставками"
+)
 public class BucketSort extends Sorting {
 
     private static final int NUM_BASKETS = 10;
@@ -13,6 +19,8 @@ public class BucketSort extends Sorting {
         if (array == null || array.length < 2) {
             return array;
         }
+
+        step(array, -1, -1); // Начало сортировки
 
         int max = array[0];
         int min = array[0];
@@ -37,15 +45,28 @@ public class BucketSort extends Sorting {
             }
             buckets[m][j + 1] = array[i];
             bucketCounts[m]++;
+            
+            // Визуализация перемещения элемента в карман
+            if (i % 2 == 0) {
+                step(array, i, m);
+            }
         }
 
         int idx = 0;
         for (int b = 0; b < NUM_BASKETS; b++) {
             for (int k = 0; k < bucketCounts[b]; k++) {
-                array[idx++] = buckets[b][k];
+                array[idx] = buckets[b][k];
+                step(array, idx, b);
+                idx++;
             }
         }
 
+        step(array, -1, -1);
         return array;
+    }
+
+    @Override
+    public String getName() {
+        return "Блочная сортировка (Bucket Sort)";
     }
 }

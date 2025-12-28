@@ -1,9 +1,15 @@
 package org.micro.kojanni.linear_sorting;
 
+import org.micro.kojanni.visual.SortingAlgorithm;
+
 /**
  * Сортировка подсчётом О(n)
  * для массивов, в которых данные представлены ограниченным количеством значений элементов.
  */
+@SortingAlgorithm(
+        name = "Сортировка подсчётом",
+        description = "Эффективный алгоритм для сортировки целых чисел в небольшом диапазоне"
+)
 public class CountingSort extends Sorting {
 
     @Override
@@ -11,6 +17,8 @@ public class CountingSort extends Sorting {
         if (array == null || array.length < 2) {
             return array;
         }
+
+        step(array, -1, -1); // Начало сортировки
 
         int max = array[0];
         int min = array[0];
@@ -34,11 +42,27 @@ public class CountingSort extends Sorting {
 
         for (int i = array.length - 1; i >= 0; i--) {
             int element = array[i];
-            int pos = count[element - min] - 1;
+            int pos = --count[element - min];
             output[pos] = element;
-            count[element - min]--;
+            
+            // Визуализация перемещения элемента
+            if (i % 2 == 0) { // Обновляем визуализацию не на каждом шаге для производительности
+                // Создаем временный массив для визуализации
+                int[] temp = new int[array.length];
+                System.arraycopy(output, 0, temp, 0, array.length);
+                step(temp, i, pos);
+            }
         }
 
+        // Обновляем исходный массив и показываем финальное состояние
+        System.arraycopy(output, 0, array, 0, array.length);
+        step(array, -1, -1);
+
         return output;
+    }
+
+    @Override
+    public String getName() {
+        return "Сортировка подсчётом (Counting Sort)";
     }
 }
