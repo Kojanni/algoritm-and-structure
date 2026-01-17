@@ -18,9 +18,64 @@ public class TreePerformanceTest {
             runAllTests(size);
         }
     }
-
     public static TestResult testTree(BinarySearchTree tree, String treeName,
                                       List<Integer> insertData, String dataType) {
+        TestResult result = new TestResult(treeName, dataType, insertData.size());
+
+        try {
+            long startTime = System.currentTimeMillis();
+            for (int value : insertData) {
+                tree.insert(value);
+            }
+            result.insertTime = System.currentTimeMillis() - startTime;
+            result.treeHeight = tree.height();
+        } catch (StackOverflowError e) {
+            result.error = "StackOverflow при вставке";
+            System.out.println("⚠ " + treeName + " (" + dataType + "): переполнение стека при вставке");
+            return result;
+        }
+
+        try {
+            int searchCount = insertData.size() / 10;
+            List<Integer> searchData = new ArrayList<>();
+            for (int i = 0; i < searchCount; i++) {
+                searchData.add(insertData.get(random.nextInt(insertData.size())));
+            }
+
+            long startTime = System.currentTimeMillis();
+            for (int value : searchData) {
+                tree.search(value);
+            }
+            result.searchTime = System.currentTimeMillis() - startTime;
+        } catch (StackOverflowError e) {
+            result.error = "StackOverflow при поиске";
+            System.out.println("⚠ " + treeName + " (" + dataType + "): переполнение стека при поиске");
+            return result;
+        }
+
+        try {
+            int removeCount = insertData.size() / 10;
+            List<Integer> removeData = new ArrayList<>();
+            for (int i = 0; i < removeCount; i++) {
+                removeData.add(insertData.get(random.nextInt(insertData.size())));
+            }
+
+            long startTime = System.currentTimeMillis();
+            for (int value : removeData) {
+                tree.remove(value);
+            }
+            result.removeTime = System.currentTimeMillis() - startTime;
+        } catch (StackOverflowError e) {
+            result.error = "StackOverflow при удалении";
+            System.out.println("!!! " + treeName + " (" + dataType + "): переполнение стека при удалении");
+            return result;
+        }
+
+        return result;
+    }
+
+    public static TestResult testBTree(BTree tree, String treeName,
+                                       List<Integer> insertData, String dataType) {
         TestResult result = new TestResult(treeName, dataType, insertData.size());
 
         long startTime = System.currentTimeMillis();
@@ -61,16 +116,18 @@ public class TreePerformanceTest {
     }
 
     public static void runAllTests(int n) {
-        System.out.println("\nРазмер выборки: N = " + n);
+        System.out.println("Размер выборки: N = " + n);
         System.out.println("Количество операций поиска и удаления: N/10 = " + (n / 10));
-        System.out.println(String.format("%-15s | %-12s | %10s | %14s | %14s | %14s | %s",
+        System.out.println(String.format("%-25s | %-15s | %10s | %14s | %14s | %14s | %s",
                 "Тип дерева", "Тип данных", "Размер", "Вставка", "Поиск", "Удаление", "Характеристики"));
+        System.out.println("-".repeat(120));
 
         List<TestResult> results = new ArrayList<>();
 
         List<Integer> randomData = generateRandomData(n);
         List<Integer> sortedData = generateSortedData(n);
 
+        // Базовые деревья
         results.add(testTree(new BinarySearchTree(), "BST", randomData, "Случайные"));
         results.add(testTree(new BinarySearchTree(), "BST", sortedData, "Упорядоченные"));
 
@@ -79,6 +136,20 @@ public class TreePerformanceTest {
 
         results.add(testTree(new TreapTree(), "Treap", randomData, "Случайные"));
         results.add(testTree(new TreapTree(), "Treap", sortedData, "Упорядоченные"));
+
+        // Опциональное задание 1: Расширяющееся деревья
+        results.add(testTree(new SplayTree(), "Splay", randomData, "Случайные"));
+        results.add(testTree(new SplayTree(), "Splay", sortedData, "Упорядоченные"));
+
+        // B-деревья с разными степенями
+        results.add(testBTree(new BTree(3), "B-дерево (t=3)", randomData, "Случайные"));
+        results.add(testBTree(new BTree(3), "B-дерево (t=3)", sortedData, "Упорядоченные"));
+        
+        results.add(testBTree(new BTree(5), "B-дерево (t=5)", randomData, "Случайные"));
+        results.add(testBTree(new BTree(5), "B-дерево (t=5)", sortedData, "Упорядоченные"));
+        
+        results.add(testBTree(new BTree(10), "B-дерево (t=10)", randomData, "Случайные"));
+        results.add(testBTree(new BTree(10), "B-дерево (t=10)", sortedData, "Упорядоченные"));
 
         for (TestResult result : results) {
             System.out.println(result);
@@ -109,6 +180,7 @@ public class TreePerformanceTest {
         long searchTime;
         long removeTime;
         int treeHeight;
+        String error;
 
         public TestResult(String treeName, String dataType, int size) {
             this.treeName = treeName;
@@ -118,7 +190,11 @@ public class TreePerformanceTest {
 
         @Override
         public String toString() {
-            return String.format("%-15s | %-12s | %10d | %10d мс | %10d мс | %10d мс | Высота: %d",
+            if (error != null) {
+                return String.format("%-25s | %-15s | %10d | ОШИБКА: %s (дерево слишком глубокое для рекурсии)",
+                        treeName, dataType, size, error);
+            }
+            return String.format("%-25s | %-15s | %10d | %10d мс | %10d мс | %10d мс | Высота: %d",
                     treeName, dataType, size, insertTime, searchTime, removeTime, treeHeight);
         }
     }
