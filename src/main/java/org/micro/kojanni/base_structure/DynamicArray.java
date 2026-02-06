@@ -65,6 +65,14 @@ public class DynamicArray {
         public int size() {
             return size;
         }
+
+        @Override
+        public T get(int index) {
+            if (index < 0 || index >= size) {
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+            }
+            return values[index];
+        }
     }
 
     /**
@@ -132,6 +140,14 @@ public class DynamicArray {
         public int size() {
             return size;
         }
+
+        @Override
+        public T get(int index) {
+            if (index < 0 || index >= size) {
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+            }
+            return values[index];
+        }
     }
 
     /**
@@ -197,6 +213,14 @@ public class DynamicArray {
 
         public int size() {
             return size;
+        }
+
+        @Override
+        public T get(int index) {
+            if (index < 0 || index >= size) {
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+            }
+            return values[index];
         }
     }
 
@@ -279,6 +303,16 @@ public class DynamicArray {
         @Override
         public int size() {
             return size;
+        }
+
+        @Override
+        public T get(int index) {
+            if (index < 0 || index >= size) {
+                throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+            }
+            int segmentIndex = index / segmentSize;
+            int positionInSegment = index % segmentSize;
+            return values[segmentIndex][positionInSegment];
         }
 
         /**

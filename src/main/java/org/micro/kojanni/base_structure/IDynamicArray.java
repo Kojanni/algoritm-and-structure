@@ -7,4 +7,6 @@ public interface IDynamicArray<T> {
     T remove(int index);
 
     int size();
+    
+    T get(int index);
 }
