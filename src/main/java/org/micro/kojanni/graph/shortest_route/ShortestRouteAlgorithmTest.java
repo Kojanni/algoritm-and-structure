@@ -1,6 +1,6 @@
 package org.micro.kojanni.graph.shortest_route;
 
-public class DijkstraAlgorithmTest {
+public class ShortestRouteAlgorithmTest {
 
     public static void main(String[] args) {
         testSimpleGraph();
@@ -28,7 +28,7 @@ public class DijkstraAlgorithmTest {
     private static void testSimpleGraph() {
         System.out.println("Простой граф (4 вершины)");
         System.out.println("Граф: 0-1(4), 0-2(3), 1-2(1), 1-3(2), 2-3(4)");
-        System.out.println("Стартовая вершина: 0");
+        System.out.println();
 
         int n = 4;
         int[][] adjacency = {
@@ -45,8 +45,12 @@ public class DijkstraAlgorithmTest {
         };
 
         DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(adjacency, weights, n, 0);
-
+        dijkstra.execute();
         printFullPaths(dijkstra, 0);
+
+        FloydWarshallAlgorithm floyd = new FloydWarshallAlgorithm(adjacency, weights, n);
+        int[][] distances = floyd.execute();
+        printDistanceMatrix(distances);
         System.out.println();
     }
 
@@ -72,7 +76,7 @@ public class DijkstraAlgorithmTest {
     private static void testComplexGraph() {
         System.out.println("Сложный граф (5 вершин)");
         System.out.println("Граф: 0-1(2), 0-2(3), 1-2(8), 1-3(5), 2-3(7), 2-4(9), 3-4(6)");
-        System.out.println("Стартовая вершина: 0");
+        System.out.println();
 
         int n = 5;
         int[][] adjacency = {
@@ -91,8 +95,12 @@ public class DijkstraAlgorithmTest {
         };
 
         DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(adjacency, weights, n, 0);
-        
+        dijkstra.execute();
         printFullPaths(dijkstra, 0);
+
+        FloydWarshallAlgorithm floyd = new FloydWarshallAlgorithm(adjacency, weights, n);
+        int[][] distances = floyd.execute();
+        printDistanceMatrix(distances);
         System.out.println();
     }
 
@@ -110,7 +118,7 @@ public class DijkstraAlgorithmTest {
     private static void testLinearGraph() {
         System.out.println("Линейный граф (цепочка из 5 вершин)");
         System.out.println("Граф: 0-1(1), 1-2(2), 2-3(3), 3-4(4)");
-        System.out.println("Стартовая вершина: 0");
+        System.out.println();
 
         int n = 5;
         int[][] adjacency = {
@@ -129,8 +137,12 @@ public class DijkstraAlgorithmTest {
         };
 
         DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(adjacency, weights, n, 0);
-        
+        dijkstra.execute();
         printFullPaths(dijkstra, 0);
+
+        FloydWarshallAlgorithm floyd = new FloydWarshallAlgorithm(adjacency, weights, n);
+        int[][] distances = floyd.execute();
+        printDistanceMatrix(distances);
         System.out.println();
     }
 
@@ -150,7 +162,7 @@ public class DijkstraAlgorithmTest {
     private static void testTriangleGraph() {
         System.out.println("Треугольный граф");
         System.out.println("Граф: 0-1(1), 0-2(10), 1-2(2)");
-        System.out.println("Стартовая вершина: 0");
+        System.out.println();
 
         int n = 3;
         int[][] adjacency = {
@@ -165,8 +177,12 @@ public class DijkstraAlgorithmTest {
         };
 
         DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(adjacency, weights, n, 0);
-        
+        dijkstra.execute();
         printFullPaths(dijkstra, 0);
+
+        FloydWarshallAlgorithm floyd = new FloydWarshallAlgorithm(adjacency, weights, n);
+        int[][] distances = floyd.execute();
+        printDistanceMatrix(distances);
         System.out.println();
     }
 
@@ -181,7 +197,7 @@ public class DijkstraAlgorithmTest {
     private static void testDisconnectedGraph() {
         System.out.println("Несвязный граф");
         System.out.println("Граф: 0-1(1), 2-3(2) (две компоненты)");
-        System.out.println("Стартовая вершина: 0");
+        System.out.println();
 
         int n = 4;
         int[][] adjacency = {
@@ -198,8 +214,13 @@ public class DijkstraAlgorithmTest {
         };
 
         DijkstraAlgorithm dijkstra = new DijkstraAlgorithm(adjacency, weights, n, 0);
-        
+        dijkstra.execute();
         printFullPaths(dijkstra, 0);
+
+        FloydWarshallAlgorithm floyd = new FloydWarshallAlgorithm(adjacency, weights, n);
+        int[][] distances = floyd.execute();
+        printDistanceMatrix(distances);
+        System.out.println("(∞ означает, что путь не существует)");
         System.out.println();
     }
 
@@ -238,6 +259,28 @@ public class DijkstraAlgorithmTest {
             if (i > 0) {
                 System.out.print(" -> ");
             }
+        }
+    }
+
+    private static void printDistanceMatrix(int[][] distances) {
+        int n = distances.length;
+        
+        System.out.print("     ");
+        for (int j = 0; j < n; j++) {
+            System.out.printf("%5d", j);
+        }
+        System.out.println();
+        
+        for (int i = 0; i < n; i++) {
+            System.out.printf("%5d", i);
+            for (int j = 0; j < n; j++) {
+                if (distances[i][j] == Integer.MAX_VALUE) {
+                    System.out.print("    ∞");
+                } else {
+                    System.out.printf("%5d", distances[i][j]);
+                }
+            }
+            System.out.println();
         }
     }
 }

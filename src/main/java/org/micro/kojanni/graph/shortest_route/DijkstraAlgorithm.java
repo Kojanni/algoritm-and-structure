@@ -41,6 +41,8 @@ public class DijkstraAlgorithm extends GraphAlgorithm<Edge[]> {
 
     @Override
     public Edge[] execute() {
+        System.out.println(getAlgorithmName() + " (стартовая вершина: " + startVertex + "):");
+        
         // Метка исходной вершины A полагается равной 0, метки остальных вершин — бесконечности
         int[] distance = createVertexArray(Integer.MAX_VALUE);
         int[] parent = createVertexArray(-1);
