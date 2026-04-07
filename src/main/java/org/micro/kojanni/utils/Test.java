@@ -1,4 +1,4 @@
-package org.micro.kojanni.algebraic_algorithms;
+package org.micro.kojanni.utils;
 
 import lombok.SneakyThrows;
 
