@@ -1,0 +1,1 @@
+Microservices architecture is popular. Java and Spring Boot are common choices.

@@ -1,0 +1,2 @@
+Java is a high-level programming language. Many developers use Java for building microservices.
+Spring Boot makes it easy to create stand-alone Java applications.
