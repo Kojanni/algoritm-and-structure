@@ -60,9 +60,9 @@ class TrieServiceTest {
 
         List<String> suggestions = trieService.getSuggestions(prefix, limit);
 
-        assertEquals("java", suggestions.get(0)); // weight 100
-        assertEquals("javascript", suggestions.get(1)); // weight 80
-        assertEquals("java programming", suggestions.get(2)); // weight 60
+        assertEquals("java", suggestions.get(0));
+        assertEquals("javascript", suggestions.get(1));
+        assertEquals("java programming", suggestions.get(2));
     }
 
     @Test

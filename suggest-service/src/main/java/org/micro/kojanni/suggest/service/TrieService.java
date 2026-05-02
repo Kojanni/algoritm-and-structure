@@ -6,6 +6,7 @@ import org.micro.kojanni.suggest.model.TrieNode;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -21,15 +22,12 @@ public class TrieService {
 
     @PostConstruct
     public void init() throws IOException {
-        // 1. Загружаем сырую папку с текстами
-        Map<String, Long> phraseFreq = corpusLoader.buildFrequencyMap("src/main/resources/corpus");
+        Map<String, Long> phraseFreq = corpusLoader.buildFrequencyMap("corpus");
 
-        // 2. Вставляем все фразы в Trie
         for (Map.Entry<String, Long> entry : phraseFreq.entrySet()) {
             insert(entry.getKey(), entry.getValue());
         }
 
-        // 3. Сортируем подсказки во всех узлах
         sortAllNodeSuggestions(root);
 
         System.out.println("Trie built with " + phraseFreq.size() + " unique phrases.");
@@ -45,6 +43,7 @@ public class TrieService {
     }
 
     private void sortAllNodeSuggestions(TrieNode node) {
+        node.sortSuggestions();
         for (TrieNode child : node.getChildren().values()) {
             sortAllNodeSuggestions(child);
         }
@@ -68,5 +67,18 @@ public class TrieService {
         root.getChildren().clear();
         root.getSuggestions().clear();
         System.out.println("Trie cleared.");
+    }
+
+    public int addFromFile(InputStream inputStream) throws IOException {
+        Map<String, Long> phraseFreq = corpusLoader.buildFrequencyMapFromStream(inputStream);
+        
+        for (Map.Entry<String, Long> entry : phraseFreq.entrySet()) {
+            insert(entry.getKey(), entry.getValue());
+        }
+        
+        sortAllNodeSuggestions(root);
+        
+        System.out.println("Added " + phraseFreq.size() + " phrases from uploaded file.");
+        return phraseFreq.size();
     }
 }

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suggest Service - Автодополнение</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #searchInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        #limitInput {
+            width: 80px;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #limitInput:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .upload-section {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #e0e0e0;
+        }
+
+        .upload-section h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #fileInput {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        #uploadBtn {
+            background: #28a745;
+        }
+
+        #uploadBtn:hover {
+            background: #218838;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        #suggestions {
+            list-style: none;
+        }
+
+        .suggestion-item {
+            padding: 14px 18px;
+            background: #f8f9fa;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .suggestion-item:hover {
+            background: #e9ecef;
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c33;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Suggest Service</h1>
+
+        <div id="errorContainer"></div>
+
+        <div class="upload-section">
+            <h3>📁 Загрузить текстовый файл</h3>
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" accept=".txt">
+                <button id="uploadBtn">Загрузить</button>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Начните вводить текст..."
+            >
+        </div>
+
+        <div class="controls">
+            <label for="limitInput">Лимит результатов:</label>
+            <input type="number" id="limitInput" value="5" min="1" max="20">
+            <button id="clearBtn">Очистить Trie</button>
+        </div>
+
+        <div id="loadingContainer"></div>
+        <ul id="suggestions"></ul>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="queryCount">0</div>
+                <div class="stat-label">Запросов</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgResults">0</div>
+                <div class="stat-label">Среднее результатов</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgTime">0</div>
+                <div class="stat-label">Среднее время (мс)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const limitInput = document.getElementById('limitInput');
+        const suggestionsContainer = document.getElementById('suggestions');
+        const clearBtn = document.getElementById('clearBtn');
+        const errorContainer = document.getElementById('errorContainer');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        let queryCount = 0;
+        let totalResults = 0;
+        let totalTime = 0;
+        let debounceTimer;
+
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+            setTimeout(() => {
+                errorContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function showLoading() {
+            loadingContainer.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+        }
+
+        function hideLoading() {
+            loadingContainer.innerHTML = '';
+        }
+
+        function updateStats(resultsCount, time) {
+            queryCount++;
+            totalResults += resultsCount;
+            totalTime += time;
+
+            document.getElementById('queryCount').textContent = queryCount;
+            document.getElementById('avgResults').textContent = (totalResults / queryCount).toFixed(1);
+            document.getElementById('avgTime').textContent = (totalTime / queryCount).toFixed(0);
+        }
+
+        async function fetchSuggestions(prefix, limit) {
+            if (!prefix || prefix.trim().length === 0) {
+                suggestionsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <p>Введите текст для поиска подсказок</p>
+                    </div>
+                `;
+                return;
+            }
+
+            showLoading();
+            const startTime = performance.now();
+
+            try {
+                const response = await fetch(`/api/suggest?prefix=${encodeURIComponent(prefix)}&limit=${limit}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const suggestions = await response.json();
+                const endTime = performance.now();
+                const time = endTime - startTime;
+
+                hideLoading();
+                updateStats(suggestions.length, time);
+
+                if (suggestions.length === 0) {
+                    suggestionsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p>Подсказок не найдено</p>
+                        </div>
+                    `;
+                } else {
+                    suggestionsContainer.innerHTML = suggestions
+                        .map(suggestion => `<li class="suggestion-item">${suggestion}</li>`)
+                        .join('');
+
+                    // Добавляем обработчик клика на подсказки
+                    document.querySelectorAll('.suggestion-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            searchInput.value = item.textContent;
+                        });
+                    });
+                }
+            } catch (error) {
+                hideLoading();
+                showError(`Ошибка при получении подсказок: ${error.message}`);
+                suggestionsContainer.innerHTML = '';
+            }
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const prefix = e.target.value;
+                const limit = parseInt(limitInput.value) || 5;
+                fetchSuggestions(prefix, limit);
+            }, 300);
+        });
+
+        limitInput.addEventListener('change', () => {
+            const prefix = searchInput.value;
+            if (prefix) {
+                const limit = parseInt(limitInput.value) || 5;
+                fetchSuggestions(prefix, limit);
+            }
+        });
+
+        uploadBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showError('Пожалуйста, выберите файл');
+                return;
+            }
+
+            if (!file.name.endsWith('.txt')) {
+                showError('Поддерживаются только .txt файлы');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Загрузка...';
+            showLoading();
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                hideLoading();
+
+                if (result.success) {
+                    suggestionsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <p>✅ Файл "${result.filename}" успешно загружен!</p>
+                            <p>Добавлено фраз: ${result.phrasesAdded}</p>
+                            <p style="font-size: 12px; color: #666; margin-top: 8px;">
+                                💾 Сохранен в корпус - будет загружаться при следующем запуске
+                            </p>
+                        </div>
+                    `;
+                    fileInput.value = '';
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                hideLoading();
+                showError(`Ошибка при загрузке файла: ${error.message}`);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Загрузить';
+            }
+        });
+
+        clearBtn.addEventListener('click', async () => {
+            if (!confirm('Вы уверены, что хотите очистить Trie?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/suggest', {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                searchInput.value = '';
+                suggestionsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>✅ Trie успешно очищен</p>
+                    </div>
+                `;
+
+                // Сброс статистики
+                queryCount = 0;
+                totalResults = 0;
+                totalTime = 0;
+                document.getElementById('queryCount').textContent = '0';
+                document.getElementById('avgResults').textContent = '0';
+                document.getElementById('avgTime').textContent = '0';
+            } catch (error) {
+                showError(`Ошибка при очистке Trie: ${error.message}`);
+            }
+        });
+
+        // Показываем начальное состояние
+        suggestionsContainer.innerHTML = `
+            <div class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <p>Введите текст для поиска подсказок</p>
+            </div>
+        `;
+    </script>
+</body>
+</html>

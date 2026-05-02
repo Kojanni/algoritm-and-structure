@@ -1,12 +1,14 @@
 package org.micro.kojanni.suggest.service;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.io.BufferedReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -18,19 +20,22 @@ import java.util.regex.Pattern;
 public class CorpusLoader {
 
     private static final Pattern WORD_BOUNDARY = Pattern.compile("[\\s\\p{Punct}]+");
-    private static final Set<String> STOP_WORDS = Set.of("и", "в", "на", "с", "к", "у", "а", "но", "за", "по", "из", "о");
+    // Стоп-слова для фильтрации униграмм (одиночных слов)
+    private static final Set<String> STOP_WORDS = Set.of("и", "в", "на", "с", "к", "у", "а", "но", "за", "по", "из", "о", "от", "до", "для", "же", "бы", "ли", "или", "что", "как", "это", "был", "была", "было", "были");
+    // Технические слова и сокращения для полной фильтрации
+    private static final Set<String> TECHNICAL_WORDS = Set.of("франц", "англ", "нем", "лат", "греч", "ред", "прим", "см", "стр", "том", "гл", "http", "www", "ru", "com");
     private static final int MIN_TOKEN_LEN = 3;
     private static final int MIN_PHRASE_FREQ = 2;
-    private static final int MAX_NGRAM = 3; // уни-, би-, триграммы
+    private static final int MAX_NGRAM = 3;
 
-    public Map<String, Long> buildFrequencyMap(String corpusDirPath) throws IOException {
+    public Map<String, Long> buildFrequencyMap(String corpusResourcePattern) throws IOException {
         Map<String, Long> freqMap = new HashMap<>();
-        List<Path> txtFiles = Files.list(Paths.get(corpusDirPath))
-                .filter(p -> p.toString().endsWith(".txt"))
-                .toList();
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource[] resources = resolver.getResources("classpath:" + corpusResourcePattern + "/*.txt");
 
-        for (Path file : txtFiles) {
-            try (BufferedReader reader = Files.newBufferedReader(file)) {
+        for (Resource resource : resources) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     processLine(line, freqMap);
@@ -44,16 +49,58 @@ public class CorpusLoader {
         return freqMap;
     }
 
+    public Map<String, Long> buildFrequencyMapFromStream(InputStream inputStream) throws IOException {
+        Map<String, Long> freqMap = new HashMap<>();
+        
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                processLine(line, freqMap);
+            }
+        }
+        
+        // Фильтрация редких фраз
+        freqMap.entrySet().removeIf(entry -> entry.getValue() < MIN_PHRASE_FREQ);
+        
+        return freqMap;
+    }
+
     private void processLine(String line, Map<String, Long> freqMap) {
         String[] tokens = WORD_BOUNDARY.split(line.toLowerCase());
-        List<String> filteredTokens = Arrays.stream(tokens)
-                .filter(t -> t.length() >= MIN_TOKEN_LEN && !STOP_WORDS.contains(t))
+        
+        // Берем все непустые токены, исключая технические слова
+        List<String> allTokens = Arrays.stream(tokens)
+                .filter(t -> !t.isEmpty() && !TECHNICAL_WORDS.contains(t))
                 .toList();
 
         // Генерация n-грамм
         for (int n = 1; n <= MAX_NGRAM; n++) {
-            for (int i = 0; i <= filteredTokens.size() - n; i++) {
-                String ngram = String.join(" ", filteredTokens.subList(i, i + n));
+            for (int i = 0; i <= allTokens.size() - n; i++) {
+                List<String> ngramTokens = allTokens.subList(i, i + n);
+                
+                // Фильтрация по правилам:
+                // 1. Для униграмм: пропускаем стоп-слова и короткие слова
+                if (n == 1) {
+                    String token = ngramTokens.get(0);
+                    if (token.length() < MIN_TOKEN_LEN || STOP_WORDS.contains(token)) {
+                        continue;
+                    }
+                }
+                
+                // 2. Для биграмм и триграмм: 
+                //    - Стоп-слова разрешены везде (даже короткие)
+                //    - Короткие НЕ-стоп-слова разрешены, если НЕ в конце фразы
+                //    - Последнее слово должно быть >= MIN_TOKEN_LEN (если не стоп-слово)
+                if (n > 1) {
+                    // Проверяем последнее слово
+                    String lastToken = ngramTokens.get(ngramTokens.size() - 1);
+                    if (lastToken.length() < MIN_TOKEN_LEN && !STOP_WORDS.contains(lastToken)) {
+                        continue; // Последнее слово короткое и не стоп-слово - пропускаем
+                    }
+                }
+                
+                String ngram = String.join(" ", ngramTokens);
                 freqMap.merge(ngram, 1L, Long::sum);
             }
         }
