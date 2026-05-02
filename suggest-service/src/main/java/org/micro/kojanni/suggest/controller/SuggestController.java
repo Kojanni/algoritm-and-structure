@@ -2,6 +2,8 @@ package org.micro.kojanni.suggest.controller;
 
 import org.micro.kojanni.suggest.service.TrieService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +28,9 @@ public class SuggestController {
 
     @Autowired
     private TrieService trieService;
+    
+    @Autowired
+    private ResourceLoader resourceLoader;
 
     @GetMapping("/api/suggest")
     public List<String> suggest(@RequestParam String prefix,
@@ -58,24 +63,35 @@ public class SuggestController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // Сохраняем файл в resources/corpus
-            String corpusPath = "src/main/resources/corpus/";
-            File corpusDir = new File(corpusPath);
+            // Получаем путь к директории corpus в исходниках (не в target)
+            Resource corpusResource = resourceLoader.getResource("classpath:corpus");
+            File targetClassesDir = corpusResource.getFile();
+            
+            // Преобразуем путь из target/classes в src/main/resources
+            String targetPath = targetClassesDir.getAbsolutePath();
+            String sourcePath = targetPath.replace(
+                File.separator + "target" + File.separator + "classes",
+                File.separator + "src" + File.separator + "main" + File.separator + "resources"
+            );
+            
+            File corpusDir = new File(sourcePath);
             if (!corpusDir.exists()) {
                 corpusDir.mkdirs();
             }
             
-            Path targetPath = Paths.get(corpusPath + file.getOriginalFilename());
-            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            File targetFile = new File(corpusDir, file.getOriginalFilename());
+            Files.copy(file.getInputStream(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            
+            System.out.println("Файл сохранен: " + targetFile.getAbsolutePath());
             
             // Добавляем в Trie (читаем заново из сохраненного файла)
-            int phrasesAdded = trieService.addFromFile(Files.newInputStream(targetPath));
+            int phrasesAdded = trieService.addFromFile(Files.newInputStream(targetFile.toPath()));
             
             response.put("success", true);
             response.put("message", "Файл успешно загружен и сохранен");
             response.put("phrasesAdded", phrasesAdded);
             response.put("filename", file.getOriginalFilename());
-            response.put("savedTo", targetPath.toString());
+            response.put("savedTo", targetFile.getAbsolutePath());
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
