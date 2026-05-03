@@ -127,7 +127,6 @@ class TrieServiceTest {
         String prefix = "jav";
         int limit = 5;
 
-        // Проверяем, что данные есть до очистки
         List<String> beforeClear = trieService.getSuggestions(prefix, limit);
         assertFalse(beforeClear.isEmpty());
 
