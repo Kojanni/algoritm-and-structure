@@ -94,14 +94,15 @@ public class CorpusLoader {
                 }
                 
                 // 2. Для биграмм и триграмм: 
-                //    - Стоп-слова разрешены везде (даже короткие)
-                //    - Короткие НЕ-стоп-слова разрешены, если НЕ в конце фразы
-                //    - Последнее слово должно быть >= MIN_TOKEN_LEN (если не стоп-слово)
+                //    - Стоп-слова разрешены в середине фразы
+                //    - Последнее слово НЕ должно быть стоп-словом
+                //    - Последнее слово должно быть >= MIN_TOKEN_LEN
                 if (n > 1) {
                     // Проверяем последнее слово
                     String lastToken = ngramTokens.get(ngramTokens.size() - 1);
-                    if (lastToken.length() < properties.getMinTokenLength() && !stopWords.contains(lastToken)) {
-                        continue; // Последнее слово короткое и не стоп-слово - пропускаем
+                    // Пропускаем, если последнее слово - стоп-слово или слишком короткое
+                    if (stopWords.contains(lastToken) || lastToken.length() < properties.getMinTokenLength()) {
+                        continue;
                     }
                 }
                 
