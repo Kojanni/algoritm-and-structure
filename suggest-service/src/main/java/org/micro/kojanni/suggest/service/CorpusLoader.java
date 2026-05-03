@@ -69,12 +69,12 @@ public class CorpusLoader {
     private void processLine(String line, Map<String, Long> freqMap) {
         String[] tokens = WORD_BOUNDARY.split(line.toLowerCase());
         
-        // Берем все непустые токены, исключая технические слова
+        // непустые, - технические слова
         List<String> allTokens = Arrays.stream(tokens)
                 .filter(t -> !t.isEmpty() && !TECHNICAL_WORDS.contains(t))
                 .toList();
 
-        // Генерация n-грамм
+        //n-граммы
         for (int n = 1; n <= MAX_NGRAM; n++) {
             for (int i = 0; i <= allTokens.size() - n; i++) {
                 List<String> ngramTokens = allTokens.subList(i, i + n);

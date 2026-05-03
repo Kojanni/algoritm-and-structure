@@ -5,25 +5,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api")
 public class SuggestController {
 
     @Autowired
@@ -32,7 +26,7 @@ public class SuggestController {
     @Autowired
     private ResourceLoader resourceLoader;
 
-    @GetMapping("/api/suggest")
+    @GetMapping("/suggest")
     public List<String> suggest(@RequestParam String prefix,
                                 @RequestParam(defaultValue = "5") int limit) {
         if (limit <= 0 || limit > 20) limit = 5;
@@ -40,13 +34,13 @@ public class SuggestController {
         return trieService.getSuggestions(prefix, limit);
     }
 
-    @DeleteMapping("/api/suggest")
+    @DeleteMapping("/suggest")
     public String clear() {
         trieService.clear();
         return "Trie cleared successfully";
     }
 
-    @PostMapping("/api/upload")
+    @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file) {
         Map<String, Object> response = new HashMap<>();
         
@@ -80,9 +74,21 @@ public class SuggestController {
             }
             
             File targetFile = new File(corpusDir, file.getOriginalFilename());
-            Files.copy(file.getInputStream(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             
-            System.out.println("Файл сохранен: " + targetFile.getAbsolutePath());
+            // Сохраняем файл с конвертацией в UTF-8
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(file.getInputStream(), detectCharset(file)));
+                 BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(targetFile), StandardCharsets.UTF_8))) {
+                
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+            
+            System.out.println("Файл сохранен в UTF-8: " + targetFile.getAbsolutePath());
             
             // Добавляем в Trie (читаем заново из сохраненного файла)
             int phrasesAdded = trieService.addFromFile(Files.newInputStream(targetFile.toPath()));
@@ -99,5 +105,35 @@ public class SuggestController {
             response.put("message", "Ошибка при загрузке файла: " + e.getMessage());
             return ResponseEntity.internalServerError().body(response);
         }
+    }
+    
+    /**
+     * Определяет кодировку файла (упрощенная версия)
+     * Пытается определить: UTF-8, Windows-1251, или использует системную кодировку
+     */
+    private Charset detectCharset(MultipartFile file) throws IOException {
+        byte[] bytes = file.getBytes();
+        
+        // Проверяем BOM для UTF-8
+        if (bytes.length >= 3 && 
+            bytes[0] == (byte)0xEF && 
+            bytes[1] == (byte)0xBB && 
+            bytes[2] == (byte)0xBF) {
+            return StandardCharsets.UTF_8;
+        }
+        
+        // Пробуем декодировать как UTF-8
+        try {
+            String test = new String(bytes, StandardCharsets.UTF_8);
+            // Проверяем на наличие replacement characters
+            if (!test.contains("\uFFFD")) {
+                return StandardCharsets.UTF_8;
+            }
+        } catch (Exception e) {
+            // UTF-8 не подошла
+        }
+        
+        // Для русских текстов чаще всего Windows-1251
+        return Charset.forName("Windows-1251");
     }
 }
