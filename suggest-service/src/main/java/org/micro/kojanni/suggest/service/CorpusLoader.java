@@ -1,5 +1,6 @@
 package org.micro.kojanni.suggest.service;
 
+import org.micro.kojanni.suggest.config.CorpusProperties;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,13 +22,16 @@ import java.util.regex.Pattern;
 public class CorpusLoader {
 
     private static final Pattern WORD_BOUNDARY = Pattern.compile("[\\s\\p{Punct}]+");
-    // Стоп-слова для фильтрации униграмм (одиночных слов)
-    private static final Set<String> STOP_WORDS = Set.of("и", "в", "на", "с", "к", "у", "а", "но", "за", "по", "из", "о", "от", "до", "для", "же", "бы", "ли", "или", "что", "как", "это", "был", "была", "было", "были");
-    // Технические слова и сокращения для полной фильтрации
-    private static final Set<String> TECHNICAL_WORDS = Set.of("франц", "англ", "нем", "лат", "греч", "ред", "прим", "см", "стр", "том", "гл", "http", "www", "ru", "com");
-    private static final int MIN_TOKEN_LEN = 3;
-    private static final int MIN_PHRASE_FREQ = 2;
-    private static final int MAX_NGRAM = 3;
+    
+    private final CorpusProperties properties;
+    private final Set<String> stopWords;
+    private final Set<String> technicalWords;
+
+    public CorpusLoader(CorpusProperties properties) {
+        this.properties = properties;
+        this.stopWords = new HashSet<>(properties.getStopWords());
+        this.technicalWords = new HashSet<>(properties.getTechnicalWords());
+    }
 
     public Map<String, Long> buildFrequencyMap(String corpusResourcePattern) throws IOException {
         Map<String, Long> freqMap = new HashMap<>();
@@ -44,7 +49,7 @@ public class CorpusLoader {
         }
 
         // Фильтрация редких фраз
-        freqMap.entrySet().removeIf(entry -> entry.getValue() < MIN_PHRASE_FREQ);
+        freqMap.entrySet().removeIf(entry -> entry.getValue() < properties.getMinPhraseFrequency());
 
         return freqMap;
     }
@@ -61,7 +66,7 @@ public class CorpusLoader {
         }
         
         // Фильтрация редких фраз
-        freqMap.entrySet().removeIf(entry -> entry.getValue() < MIN_PHRASE_FREQ);
+        freqMap.entrySet().removeIf(entry -> entry.getValue() < properties.getMinPhraseFrequency());
         
         return freqMap;
     }
@@ -71,11 +76,11 @@ public class CorpusLoader {
         
         // непустые, - технические слова
         List<String> allTokens = Arrays.stream(tokens)
-                .filter(t -> !t.isEmpty() && !TECHNICAL_WORDS.contains(t))
+                .filter(t -> !t.isEmpty() && !technicalWords.contains(t))
                 .toList();
 
         //n-граммы
-        for (int n = 1; n <= MAX_NGRAM; n++) {
+        for (int n = 1; n <= properties.getMaxNgram(); n++) {
             for (int i = 0; i <= allTokens.size() - n; i++) {
                 List<String> ngramTokens = allTokens.subList(i, i + n);
                 
@@ -83,7 +88,7 @@ public class CorpusLoader {
                 // 1. Для униграмм: пропускаем стоп-слова и короткие слова
                 if (n == 1) {
                     String token = ngramTokens.get(0);
-                    if (token.length() < MIN_TOKEN_LEN || STOP_WORDS.contains(token)) {
+                    if (token.length() < properties.getMinTokenLength() || stopWords.contains(token)) {
                         continue;
                     }
                 }
@@ -95,7 +100,7 @@ public class CorpusLoader {
                 if (n > 1) {
                     // Проверяем последнее слово
                     String lastToken = ngramTokens.get(ngramTokens.size() - 1);
-                    if (lastToken.length() < MIN_TOKEN_LEN && !STOP_WORDS.contains(lastToken)) {
+                    if (lastToken.length() < properties.getMinTokenLength() && !stopWords.contains(lastToken)) {
                         continue; // Последнее слово короткое и не стоп-слово - пропускаем
                     }
                 }

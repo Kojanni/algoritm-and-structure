@@ -1,2 +1,51 @@
 server:
   port: 8082
+
+corpus:
+  processing:
+    min-token-length: 3
+    min-phrase-frequency: 2
+    max-ngram: 3
+    stop-words:
+      - и
+      - в
+      - на
+      - с
+      - к
+      - у
+      - а
+      - но
+      - за
+      - по
+      - из
+      - о
+      - от
+      - до
+      - для
+      - же
+      - бы
+      - ли
+      - или
+      - что
+      - как
+      - это
+      - был
+      - была
+      - было
+      - были
+    technical-words:
+      - франц
+      - англ
+      - нем
+      - лат
+      - греч
+      - ред
+      - прим
+      - см
+      - стр
+      - том
+      - гл
+      - http
+      - www
+      - ru
+      - com
